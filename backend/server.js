@@ -1,8 +1,8 @@
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
 const cors = require("cors");
-import fs from "fs";
-import path from "path";
+const fs = require("fs");
+const path = require("path");
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "100mb" }));
