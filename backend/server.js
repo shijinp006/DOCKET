@@ -17,12 +17,7 @@ const otpStore = new Map(); // Key: registerNumber, Value: otp
 const dbPath = "/data/database.sqlite";
 
 // 🔥 create /data if not exists
-const dir = path.dirname(dbPath);
-if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-}
-
-const db = new sqlite3.Database(dbPath, (err) => {
+const db = new sqlite3.Database("/data/database.sqlite", (err) => {
     if (err) {
         console.error("DB ERROR:", err.message);
     } else {
