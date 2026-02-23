@@ -8,6 +8,8 @@ import { MdOutlineAddBox, MdOutlineGroupAdd, MdOutlineSpaceDashboard } from 'rea
 import { PiUserCheckBold } from 'react-icons/pi';
 import { TbReportMedical } from 'react-icons/tb';
 import { LuMessageSquareMore } from 'react-icons/lu';
+import { GoTrophy } from "react-icons/go";
+
 
 const Sidebar = () => {
     const menuItems = [
@@ -20,6 +22,7 @@ const Sidebar = () => {
         { to: '/teacher/addstudent', icon: MdOutlineGroupAdd, label: 'Add Students' },
         { to: '/teacher/addreports', icon: TbReportMedical, label: 'Add Reports' },
         { to: '/teacher/teacher-notification', icon: LuMessageSquareMore, label: 'Notification' },
+        { to: '/teacher/teacher-announcement', icon: GoTrophy, label: 'Announcement' },
     ];
 
     return (

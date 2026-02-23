@@ -35,6 +35,8 @@ import AdminFeedback from "./pages/admin/AdminFeedback";
 import AdminNotification from "./pages/admin/AdminNotification";
 import TeacherNotification from "./pages/teacher/TeacherNotification";
 import UserNotification from "./pages/UserNotification";
+import Announcements from "./pages/Announcements";
+import TeacherAnnouncement from "./pages/teacher/TeacherAnnouncement";
 
 function App() {
   const { pathname } = useLocation()
@@ -56,6 +58,7 @@ function App() {
         <Route path="/event/:id/register" element={<EventRegistration />} />
         <Route path="/login" element={<Login />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/announcements" element={<Announcements />} />
         <Route path="/about" element={<About />} />
         <Route path="/dashboard" element={<UserDashboard />} />
         <Route path="/user-notification" element={<UserNotification />} />
@@ -68,6 +71,7 @@ function App() {
           <Route path='rating' element={<Rating />} />
           <Route path='registrations' element={<Registrations />} />
           <Route path='attendence' element={<Attendence />} />
+          <Route path='teacher-announcement' element={<TeacherAnnouncement />} />
           <Route path='addstudent' element={<AddStudent />} />
           <Route path='addreports' element={<AddReports />} />
           <Route path='teacher-notification' element={<TeacherNotification />} />

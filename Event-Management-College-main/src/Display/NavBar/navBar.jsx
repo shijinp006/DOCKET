@@ -95,6 +95,15 @@ export function NavBar() {
                 </Link>
                 <div className="absolute -bottom-2 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-blue-600 group-hover:w-full transition-all duration-300 rounded-full" />
               </div>
+              <div className="group cursor-pointer relative">
+                <Link
+                  to="/announcements"
+                  className="font-sans font-light font-lexend text-white text-[15px] transition-colors group-hover:text-blue-300"
+                >
+                  Announcements
+                </Link>
+                <div className="absolute -bottom-2 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-blue-600 group-hover:w-full transition-all duration-300 rounded-full" />
+              </div>
 
               <div className="group cursor-pointer relative">
                 <Link

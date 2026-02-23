@@ -81,7 +81,8 @@ const UserProfile = () => {
         return <div className="text-white text-center p-10 mt-20">Loading profile...</div>;
     }
 
-    const isStudent = displayUser.userType === 'student';
+    // const isStudent = displayUser.userType === 'student';
+    const isStudent = displayUser.role === 'student';
 
     const InfoBlock = ({ icon: Icon, label, value, name, color, editable }) => (
         <div className="flex items-center gap-4 text-gray-300">
@@ -200,7 +201,7 @@ const UserProfile = () => {
                                 <div className="flex items-center gap-3 flex flex-col md:flex-row">
                                     <span className="px-3 py-1 bg-blue-500/10 text-blue-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-500/20 flex items-center gap-2 shadow-lg shadow-blue-500/5">
                                         {isStudent ? <FaGraduationCap /> : <FaChalkboardTeacher />}
-                                        {displayUser.userType}
+                                        {displayUser.role}
                                     </span>
                                     <span className="px-3 py-1 bg-purple-500/10 text-purple-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-purple-500/20 shadow-lg shadow-purple-500/5">
                                         {displayUser.department}

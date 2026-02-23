@@ -82,6 +82,16 @@ db.serialize(() => {
         replies TEXT -- JSON string of reply objects
     )`);
 
+    // Event Results Table
+    db.run(`CREATE TABLE IF NOT EXISTS event_results (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        eventId INTEGER,
+        eventName TEXT,
+        prizeLevel TEXT,
+        winners TEXT, -- JSON string of [{ name, registerNumber }]
+        announcedAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )`);
+
     // Seed Data (Check if empty then insert)
     db.get("SELECT count(*) as count FROM allowed_students", (err, row) => {
         if (row.count === 0) {
@@ -904,6 +914,58 @@ app.post("/api/notifications/:id/reply", (req, res) => {
             res.json({ message: "Reply added successfully", reply: newReply });
         });
         stmt.finalize();
+    });
+});
+
+// 15. Event Results (Winners) APIs
+
+// Get all event results
+app.get("/api/event-results", (req, res) => {
+    db.all("SELECT * FROM event_results ORDER BY announcedAt DESC", [], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        const processed = rows.map(r => ({
+            ...r,
+            winners: JSON.parse(r.winners || "[]")
+        }));
+        res.json(processed);
+    });
+});
+
+// Add event results (Multiple prize levels for an event)
+app.post("/api/event-results", (req, res) => {
+    const { eventId, eventName, results } = req.body; // results is [{ prizeLevel, winners: [{name, regNo}] }]
+
+    if (!eventId || !results || !Array.isArray(results)) {
+        return res.status(400).json({ error: "Invalid data format" });
+    }
+
+    const stmt = db.prepare(`
+        INSERT INTO event_results (eventId, eventName, prizeLevel, winners)
+        VALUES (?, ?, ?, ?)
+    `);
+
+    db.serialize(() => {
+        results.forEach(resItem => {
+            stmt.run(
+                eventId,
+                eventName,
+                resItem.prizeLevel,
+                JSON.stringify(resItem.winners || [])
+            );
+        });
+        stmt.finalize((err) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: "Results announced successfully" });
+        });
+    });
+});
+
+// Delete an event result
+app.delete("/api/event-results/:id", (req, res) => {
+    const { id } = req.params;
+    db.run("DELETE FROM event_results WHERE id = ?", [id], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json({ message: "Result deleted successfully" });
     });
 });
 
