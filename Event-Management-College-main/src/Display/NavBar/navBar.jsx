@@ -66,21 +66,21 @@ export function NavBar() {
                     to="/teacher"
                     className="font-sans font-light font-lexend text-white text-[15px] transition-colors group-hover:text-blue-300"
                   >
-                    Teacher Dashboard
+                    Dashboard
                   </Link>
                 ) : user?.role === "admin" ? (
                   <Link
                     to="/admin"
                     className="font-sans font-light font-lexend text-white text-[15px] transition-colors group-hover:text-blue-300"
                   >
-                    Admin Dashboard
+                    Dashboard
                   </Link>
                 ) : (
                   <Link
                     to="/dashboard"
                     className="font-sans font-light font-lexend text-white text-[15px] transition-colors group-hover:text-blue-300"
                   >
-                    User Dashboard
+                    Dashboard
                   </Link>
                 )}
                 <div className="absolute -bottom-2 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-blue-600 group-hover:w-full transition-all duration-300 rounded-full" />

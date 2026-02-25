@@ -5,7 +5,7 @@ import axios from "axios";
 import { useAppContext } from "../../context/AppContext";
 
 // Configure base URL for axios
-const API_URL = " https://safa-eventmanagement1-2.onrender.com";
+const API_URL = "http://localhost:5000";
 
 const Login = () => {
   const navigate = useNavigate();

@@ -13,7 +13,7 @@ import {
 import { LuScanFace, LuMail } from "react-icons/lu";
 import { toast } from "react-toastify";
 
-const API_URL = " https://safa-eventmanagement1-2.onrender.com/api/teachers";
+const API_URL = " http://localhost:5000/api/teachers";
 
 const isValidEmail = (email) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -227,7 +227,7 @@ const AddTeacher = () => {
                 <input
                   type="text"
                   name="teacherId"
-                  placeholder="e.g. TCH001"
+                  placeholder="e.g. AEDXBCM001"
                   value={formData.teacherId}
                   onChange={handleChange}
                   className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.03] border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-bold text-lg"

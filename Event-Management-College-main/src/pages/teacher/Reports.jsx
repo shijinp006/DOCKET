@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const API_BASE_URL = " https://safa-eventmanagement1-2.onrender.com/api";
+const API_BASE_URL = " http://localhost:5000/api";
 
 const STORAGE_KEY = "reports_list";
 

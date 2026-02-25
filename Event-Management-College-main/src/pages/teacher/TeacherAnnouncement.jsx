@@ -6,7 +6,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const API_BASE_URL = " https://safa-eventmanagement1-2.onrender.com/api";
+const API_BASE_URL = " http://localhost:5000/api";
 
 const TeacherAnnouncement = () => {
     const { user } = useAppContext();
@@ -17,6 +17,7 @@ const TeacherAnnouncement = () => {
     const [attendance, setAttendance] = useState([]);
     const [students, setStudents] = useState([]);
     const [eventStudents, setEventStudents] = useState([]);
+    const [publishedResults, setPublishedResults] = useState([]);
 
     // Result form state
     const [results, setResults] = useState([
@@ -34,11 +35,12 @@ const TeacherAnnouncement = () => {
     const loadInitialData = async () => {
         setLoading(true);
         try {
-            const [eventsRes, regsRes, attRes, studentsRes] = await Promise.all([
+            const [eventsRes, regsRes, attRes, studentsRes, resultsRes] = await Promise.all([
                 axios.get(`${API_BASE_URL}/events`),
                 axios.get(`${API_BASE_URL}/registrations`),
                 axios.get(`${API_BASE_URL}/attendance`),
-                axios.get(`${API_BASE_URL}/users`)
+                axios.get(`${API_BASE_URL}/users`),
+                axios.get(`${API_BASE_URL}/event-results`)
             ]);
 
             // Only show events where this teacher is incharge
@@ -50,6 +52,7 @@ const TeacherAnnouncement = () => {
             setRegistrations(regsRes.data);
             setAttendance(attRes.data);
             setStudents(studentsRes.data);
+            setPublishedResults(resultsRes.data);
         } catch (error) {
             console.error("Load data error:", error);
             toast.error("Failed to load necessary data");
@@ -151,8 +154,12 @@ const TeacherAnnouncement = () => {
                 }))
             });
             toast.success("Results announced successfully!");
+
+            // Refresh published results
+            const resultsRes = await axios.get(`${API_BASE_URL}/event-results`);
+            setPublishedResults(resultsRes.data);
+
             // Reset
-            setSelectedEvent(null);
             setResults([
                 { id: 1, prizeLevel: '1st Prize', winners: [] },
                 { id: 2, prizeLevel: '2nd Prize', winners: [] },
@@ -161,6 +168,20 @@ const TeacherAnnouncement = () => {
         } catch (error) {
             console.error("Submit error:", error);
             toast.error("Failed to announce results");
+        }
+    };
+    const handleDeleteResult = async (resultId) => {
+        if (!window.confirm("Are you sure you want to delete this announcement?")) return;
+
+        try {
+            await axios.delete(`${API_BASE_URL}/event-results/${resultId}`);
+            toast.success("Result deleted successfully");
+            // Refresh results
+            const resultsRes = await axios.get(`${API_BASE_URL}/event-results`);
+            setPublishedResults(resultsRes.data);
+        } catch (error) {
+            console.error("Delete error:", error);
+            toast.error("Failed to delete result");
         }
     };
 
@@ -336,6 +357,46 @@ const TeacherAnnouncement = () => {
                                         </p>
                                     </div>
                                 </section>
+
+                                {/* Published Results Section */}
+                                {publishedResults.filter(pr => String(pr.eventId) === String(selectedEvent.id)).length > 0 && (
+                                    <section className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl">
+                                        <h3 className="text-xl font-black text-white mb-8 flex items-center gap-3">
+                                            <span className="w-1.5 h-6 bg-red-500 rounded-full"></span>
+                                            Published Announcements
+                                        </h3>
+                                        <div className="space-y-4">
+                                            {publishedResults
+                                                .filter(pr => String(pr.eventId) === String(selectedEvent.id))
+                                                .map((result) => (
+                                                    <div key={result.id} className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 flex items-center justify-between group">
+                                                        <div>
+                                                            <div className="text-indigo-400 text-xs font-black uppercase tracking-widest mb-1">
+                                                                {result.prizeLevel}
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {result.winners.map((w, i) => (
+                                                                    <span key={i} className="text-white font-bold text-sm">
+                                                                        {w.name}{i < result.winners.length - 1 ? "," : ""}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                            <div className="text-[10px] text-gray-500 mt-2 font-medium">
+                                                                Published on {new Date(result.announcedAt).toLocaleDateString()}
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleDeleteResult(result.id)}
+                                                            className="p-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                                            title="Delete Announcement"
+                                                        >
+                                                            <MdDelete className="text-xl" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    </section>
+                                )}
                             </motion.div>
                         )}
                     </div>

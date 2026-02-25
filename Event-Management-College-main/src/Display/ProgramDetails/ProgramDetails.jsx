@@ -10,7 +10,7 @@ import {
 } from "react-icons/fa";
 import axios from "axios";
 
-const API_BASE_URL = " https://safa-eventmanagement1-2.onrender.com/api";
+const API_BASE_URL = " http://localhost:5000/api";
 
 // Map to restore icons from localStorage string labels
 const ICON_MAP = {

@@ -19,7 +19,7 @@ import {
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const API_BASE_URL = " https://safa-eventmanagement1-2.onrender.com/api";
+const API_BASE_URL = " http://localhost:5000/api"; // Update with your backend URL
 
 const AddEvent = () => {
   const { id } = useParams();
@@ -69,6 +69,9 @@ const AddEvent = () => {
         axios.get(`${API_BASE_URL}/registered-teachers`)
       ]);
 
+
+      console.log(teachersRes,"teachers");
+      
       setPrograms(programsRes.data);
       setTeachers(teachersRes.data);
 

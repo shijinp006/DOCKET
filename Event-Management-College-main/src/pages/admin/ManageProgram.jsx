@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const API_BASE_URL = " https://safa-eventmanagement1-2.onrender.com/api";
+const API_BASE_URL = " http://localhost:5000/api"; // Update with your backend URL
 
 const ManageProgram = () => {
   const navigate = useNavigate();
@@ -42,17 +42,19 @@ const ManageProgram = () => {
   const confirmDelete = async () => {
     if (!deleteConfig) return;
     const { id, type } = deleteConfig;
+    console.log("delete",id);
+    
 
     try {
       if (type === "program") {
         await axios.delete(`${API_BASE_URL}/programs/${id}`);
-        setPrograms(programs.filter(p => p.id !== id));
+        setPrograms(programs.filter(p => p._id !== id));
         // Also remove associated events from state
         setEvents(events.filter(e => e.programId !== id));
         toast.success("Program and associated events deleted successfully");
       } else {
         await axios.delete(`${API_BASE_URL}/events/${id}`);
-        setEvents(events.filter(e => e.id !== id));
+        setEvents(events.filter(e => e._id !== id));
         toast.success("Event deleted successfully");
       }
       setDeleteConfig(null);
@@ -68,7 +70,7 @@ const ManageProgram = () => {
       navigate('/admin/admin-add-program', { state: { programData: item } });
     } else {
       // For Admin Add Event
-      navigate(`/admin/addevent/${item.id}`, { state: { eventData: item } });
+      navigate(`/admin/addevent/${item._id}`, { state: { eventData: item } });
     }
   };
 
@@ -77,7 +79,7 @@ const ManageProgram = () => {
     const newStatus = currentStatus === "approved" ? "rejected" : "approved";
     try {
       await axios.patch(`${API_BASE_URL}/events/${id}/status`, { status: newStatus });
-      setEvents(events.map(e => e.id === id ? { ...e, status: newStatus } : e));
+      setEvents(events.map(e => e._id === id ? { ...e, status: newStatus } : e));
       toast.success(`Event ${newStatus} successfully!`);
     } catch (error) {
       console.error("Status update error:", error);
@@ -139,7 +141,7 @@ const ManageProgram = () => {
                     <td className="p-3 text-center">{item.programDate || item.date}</td>
 
                     {activeTab === 'events' && (() => {
-                      const program = programs.find(p => p.id === item.programId);
+                      const program = programs.find(p => p._id === item.programId);
                       return <td className="p-3 text-center text-sm">{program?.name || item.programName || "-"}</td>;
                     })()}
 
@@ -162,7 +164,7 @@ const ManageProgram = () => {
 
                       {activeTab === 'events' && (
                         <button
-                          onClick={() => handleToggleStatus(item.id, item.status)}
+                          onClick={() => handleToggleStatus(item._id, item.status)}
                           className={`p-2 rounded hover:text-white transition-colors ${item.status === 'approved' ? 'bg-red-500/20 text-red-400 hover:bg-red-500' : 'bg-green-500/20 text-green-400 hover:bg-green-500'}`}
                           title={item.status === 'approved' ? "Reject" : "Approve"}
                         >
@@ -171,7 +173,7 @@ const ManageProgram = () => {
                       )}
 
                       <button
-                        onClick={() => handleDelete(item.id, activeTab === "programs" ? "program" : "event")}
+                        onClick={() => handleDelete(item._id, activeTab === "programs" ? "program" : "event")}
                         className="p-2 bg-red-600/20 text-red-400 rounded hover:bg-red-600 hover:text-white transition-colors"
                         title="Delete"
                       >

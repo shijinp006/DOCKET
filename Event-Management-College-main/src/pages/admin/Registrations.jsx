@@ -7,7 +7,7 @@ import { toast } from 'react-toastify';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const API_BASE_URL = " https://safa-eventmanagement1-2.onrender.com/api";
+const API_BASE_URL = " http://localhost:5000/api";
 
 const Registrations = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);

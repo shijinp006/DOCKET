@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import { FaMapMarkerAlt, FaSync } from "react-icons/fa";
 
-const API_BASE_URL = " https://safa-eventmanagement1-2.onrender.com/api";
+const API_BASE_URL = " http://localhost:5000/api";
 
 const UserDashboard = () => {
   const { user } = useAppContext();
