@@ -2,6 +2,9 @@ import express from "express";
 import mongoose, { get } from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
+import express from "express";
+import path from "path";
+
 
 import { addAllowedAdmin } from "./Contrlos/Admin/createAdmin.js"
 import { verifyId } from "./Contrlos/VeriftId/verifyId.js"
@@ -74,6 +77,7 @@ app.use(cors({
 }));
 // Create or connect to database
 
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 app.post("/add-allowed-admin", addAllowedAdmin);

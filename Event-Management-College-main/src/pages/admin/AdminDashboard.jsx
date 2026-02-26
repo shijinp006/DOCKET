@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 import { useState } from 'react';
 import { useEffect } from 'react';
 
-const API_BASE_URL = " http://localhost:5000/api";
+const API_BASE_URL = "http://localhost:5000/api";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -16,20 +16,33 @@ const AdminDashboard = () => {
   })
   const [recentEvents, setRecentEvents] = useState([])
   const [loading, setLoading] = useState(true)
+  const [teachers, setTeachers] = useState([])
+  console.log(recentEvents, "recent events");
+  console.log(teachers,"teachers");
+  
+
 
   const fetchDashboardData = async () => {
     setLoading(true)
 
     try {
-      const [eventsRes, usersRes, teachersRes] = await Promise.all([
+      const [eventsRes, usersRes, teachersRes, usersRes2] = await Promise.all([
         axios.get(`${API_BASE_URL}/events`),
         axios.get(`${API_BASE_URL}/students`),
-        axios.get(`${API_BASE_URL}/teachers`)
+        axios.get(`${API_BASE_URL}/teachers`),
+        axios.get(`${API_BASE_URL}/users`)
       ]);
+      console.log(teachersRes.data, "teac");
 
       const allEvents = eventsRes.data;
       const students = usersRes.data;
       const teachers = teachersRes.data;
+      const users = usersRes2.data;
+
+      setTeachers(users.filter(u => u.role === "teacher"));
+
+
+
 
       const now = new Date()
       const upcoming = allEvents.filter(event => new Date(event.date) >= now).length
@@ -163,7 +176,7 @@ const AdminDashboard = () => {
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {recentEvents.map((event, index) => (
-                    <tr key={event.id} className="hover:bg-white/[0.02] transition-colors group">
+                    <tr key={event._id} className="hover:bg-white/[0.02] transition-colors group">
                       <td className='px-8 py-6 text-gray-600 font-mono font-bold'>{index + 1}</td>
                       <td className='px-8 py-6'>
                         <div className="flex items-center gap-4">
@@ -181,7 +194,7 @@ const AdminDashboard = () => {
                       </td>
                       <td className='px-8 py-6 text-gray-400 max-sm:hidden text-center font-medium text-sm'>{event.date}</td>
                       <td className='px-8 py-6 text-right'>
-                        <p className="text-white font-bold text-xs truncate max-w-[120px] ml-auto">{event.incharge}</p>
+                        <p className="text-white font-bold text-xs truncate max-w-[120px] ml-auto">  {teachers.find(t => t._id === event.incharge)?.name || "None"}</p>
                       </td>
                     </tr>
                   ))}

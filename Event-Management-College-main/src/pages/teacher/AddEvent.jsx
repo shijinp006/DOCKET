@@ -60,8 +60,10 @@ const AddEvent = () => {
           axios.get(`${API_BASE_URL}/programs`),
           axios.get(`${API_BASE_URL}/registered-teachers`)
         ]);
+        // console.log(programsRes,"pr res" , teachersRes,"tec");
+        
         setPrograms(programsRes.data);
-        setTeachers(teachersRes.data);
+        setTeachers(teachersRes.data?.data);
       } catch (error) {
         console.error("Fetch error:", error);
         toast.error("Failed to load dependency data.");
@@ -76,13 +78,13 @@ const AddEvent = () => {
   };
 
   const handleProgramSelect = (e) => {
-    const selectedId = Number(e.target.value);
-    const selectedProgram = programs.find(p => p.id === selectedId);
+    const selectedId = (e.target.value);
+    const selectedProgram = programs.find(p => p._id === selectedId);
     if (selectedProgram) {
       setEventData(prev => ({
         ...prev,
         programName: selectedProgram.name,
-        programId: selectedProgram.id
+        programId: selectedProgram._id
       }));
     }
   };
@@ -211,7 +213,7 @@ const AddEvent = () => {
                   >
                     <option value="" disabled className="bg-gray-900">Select Program</option>
                     {programs.map((prog) => (
-                      <option key={prog.id} value={prog.id} className="bg-gray-900">
+                      <option key={prog._id} value={prog._id} className="bg-gray-900">
                         {prog.name}
                       </option>
                     ))}
@@ -382,25 +384,26 @@ const AddEvent = () => {
                       t.department.toLowerCase().includes(teacherSearch.toLowerCase())
                     )
                     .map((teacher) => {
-                      const isSelected = eventData.incharge.split(", ").includes(teacher.name);
+                      const isSelected = eventData.incharge.includes(teacher._id);
                       return (
                         <label
-                          key={teacher.id}
+                          key={teacher._id}
                           className={`flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer group ${isSelected ? 'bg-violet-600/20 border-violet-500/50' : 'bg-white/[0.02] border-white/5 hover:border-white/20'
                             }`}
                         >
-                          <input
-                            type="checkbox"
-                            value={teacher.name}
-                            checked={isSelected}
-                            onChange={(e) => {
-                              const name = e.target.value;
-                              const currentIncharges = eventData.incharge ? eventData.incharge.split(", ") : [];
-                              let newIncharges = e.target.checked ? [...currentIncharges, name] : currentIncharges.filter(i => i !== name);
-                              setEventData(prev => ({ ...prev, incharge: newIncharges.join(", ") }));
-                            }}
-                            className="hidden"
-                          />
+                            <input
+                              type="checkbox"
+                              value={`${teacher._id}`}
+                              checked={isSelected}
+                              onChange={(e) => {
+                                const id = e.target.value;
+                          
+                                const currentIncharges = eventData.incharge ? eventData.incharge.split(", ") : [];
+                                let newIncharges = e.target.checked ? [...currentIncharges, id] : currentIncharges.filter(i => i !== id);
+                                setEventData(prev => ({ ...prev, incharge: newIncharges.join(", ") }));
+                              }}
+                              className="hidden"
+                            />
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isSelected ? 'bg-violet-600 text-white' : 'bg-white/5 text-gray-500 group-hover:text-gray-300'
                             }`}>
                             <FaUserTie />
@@ -414,7 +417,9 @@ const AddEvent = () => {
                     })
                 )}
               </div>
-              <p className="text-[10px] font-black text-violet-400 mt-6 text-center uppercase tracking-widest">Selected: {eventData.incharge || "None"}</p>
+              <p className="text-[10px] font-black text-violet-400 mt-6 text-center uppercase tracking-widest">Selected:{eventData.incharge
+    ? eventData.incharge.split(", ").map(id => teachers.find(t => t._id === id)?.name).join(", ")
+    : "None"}</p>
             </div>
           </div>
 

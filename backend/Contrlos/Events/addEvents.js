@@ -22,9 +22,6 @@ export const createEvent = async (req, res) => {
       departmentIndividualLimit,
       membersPerTeamFromDepartment,
       teamsPerDepartment,
-      poster,
-      priceImage,
-      sponsorImages,
       status,
     } = req.body;
 
@@ -40,13 +37,25 @@ export const createEvent = async (req, res) => {
       });
     }
 
-    // Optional: verify program exists
     const programExists = await Program.findById(programId);
     if (!programExists) {
       return res.status(404).json({
         error: "Associated program not found",
       });
     }
+
+    // 📂 Get uploaded files safely
+    const poster = req.files?.poster
+      ? `/uploads/${req.files.poster[0].filename}`
+      : null;
+
+    const priceImage = req.files?.priceImage
+      ? `/uploads/${req.files.priceImage[0].filename}`
+      : null;
+
+    const sponsorImages = req.files?.sponsorImages
+      ? req.files.sponsorImages.map(file => `/uploads/${file.filename}`)
+      : [];
 
     const newEvent = await Event.create({
       programId,
@@ -68,9 +77,7 @@ export const createEvent = async (req, res) => {
       teamsPerDepartment,
       poster,
       priceImage,
-      sponsorImages: Array.isArray(sponsorImages)
-        ? sponsorImages
-        : [],
+      sponsorImages,
       status: status || "pending",
     });
 

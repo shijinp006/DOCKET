@@ -19,7 +19,7 @@ import {
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const API_BASE_URL = " http://localhost:5000/api"; // Update with your backend URL
+const API_BASE_URL = "http://localhost:5000/api"; // Update with your backend URL
 
 const AddEvent = () => {
   const { id } = useParams();
@@ -70,10 +70,10 @@ const AddEvent = () => {
       ]);
 
 
-      console.log(teachersRes,"teachers");
+      // console.log(teachersRes,"teachers");
       
       setPrograms(programsRes.data);
-      setTeachers(teachersRes.data);
+      setTeachers(teachersRes.data?.data);
 
       if (isEditMode) {
         const eventsRes = await axios.get(`${API_BASE_URL}/events`);
@@ -95,13 +95,13 @@ const AddEvent = () => {
   };
 
   const handleProgramSelect = (e) => {
-    const selectedId = Number(e.target.value);
-    const selectedProgram = programs.find(p => p.id === selectedId);
+    const selectedId = (e.target.value);
+    const selectedProgram = programs.find(p => p._id === selectedId);
     if (selectedProgram) {
       setEventData(prev => ({
         ...prev,
         programName: selectedProgram.name,
-        programId: selectedProgram.id
+        programId: selectedProgram._id
       }));
     }
   };
@@ -223,7 +223,7 @@ const AddEvent = () => {
                   >
                     <option value="" disabled className="bg-gray-900">Select Program</option>
                     {programs.map((prog) => (
-                      <option key={prog.id} value={prog.id} className="bg-gray-900">
+                      <option key={prog._id} value={prog._id} className="bg-gray-900">
                         {prog.name}
                       </option>
                     ))}

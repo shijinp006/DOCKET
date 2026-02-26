@@ -2,6 +2,7 @@ import AllowedTeacher from "../../Models/Teacher/teacherSchema.js";
 
 export const getAllTeachers = async (req, res) => {
 
+
   
   try {
     const teachers = await AllowedTeacher.find()

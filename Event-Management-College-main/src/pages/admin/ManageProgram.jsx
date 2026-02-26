@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const API_BASE_URL = " http://localhost:5000/api"; // Update with your backend URL
+const API_BASE_URL = "http://localhost:5000/api"; // Update with your backend URL
 
 const ManageProgram = () => {
   const navigate = useNavigate();

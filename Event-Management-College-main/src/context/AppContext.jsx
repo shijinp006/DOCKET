@@ -11,6 +11,8 @@ export const AppContextProvider = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showUserLogin, setShowUserLogin] = useState(false);
 
+  
+
   const value = {
     navigate,
     user, setUser,

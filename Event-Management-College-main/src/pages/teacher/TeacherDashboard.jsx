@@ -15,22 +15,35 @@ const TeacherDashboard = () => {
     completedEvents: 0
   })
   const [recentEvents, setRecentEvents] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+
+  console.log(dashboardData,"dash board data");
+  
 
   const fetchDashboard = async () => {
-    setLoading(true)
-    if (!user) return;
+    setLoading(false)
+    // console.log(user,"user");
+    
+    // if (!user) return;
 
     try {
       const res = await axios.get(`${API_BASE_URL}/events`);
       const allEvents = res.data;
-
+        // console.log(res,"events");
+        
       const teacherEvents = allEvents.filter(event =>
-        event.incharge && event.incharge.includes(user.name)
+        event.incharge && event.incharge.includes(user._id)
       )
+      // console.log(teacherEvents,"teacher");
+      
 
       const now = new Date()
-      const upcoming = teacherEvents.filter(event => new Date(event.date) >= now).length
+  const upcoming = teacherEvents.filter(event => {
+  const eventDate = new Date(event.date); // parse string to Date
+  return !isNaN(eventDate) && eventDate >= now; // check it's valid and compare
+}).length;
+      // console.log(upcoming,"up");
+      
       const completed = teacherEvents.length - upcoming
 
       setDashboardData({
