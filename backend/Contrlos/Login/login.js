@@ -13,13 +13,16 @@ console.log(req.body,"body");
 
       if(registerNumber === "ADMIN001") {
         const admin = await AllowedAdmin.findOne({ adminId: registerNumber });
-      
+        console.log(admin,"ad");
+        
         
         if (!admin) {
           return res.status(401).json({ error: "Invalid admin credentials" });
         }
         // If admin exists, check password
         const isMatch = await bcrypt.compare(password, admin.password);
+        console.log(isMatch,"match");
+        
   
         if (!isMatch) {
           return res.status(401).json({ error: "Invalid admin credentials" });

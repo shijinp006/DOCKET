@@ -49,6 +49,7 @@ export const registerUser = async (req, res) => {
       gender,
       designation,
       qualification,
+      profilePicture : null, // Set default profile picture to null
     });
 
     return res.status(201).json({

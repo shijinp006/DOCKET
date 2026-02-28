@@ -25,9 +25,12 @@ const FEATURE_DEFAULTS = [Sparkles, Target, Zap, Award];
 
 const ProgramDetails = () => {
   const { id } = useParams();
+  console.log(id, "id123");
+
   const navigate = useNavigate();
   const [showDetail, setShowDetail] = useState(null);
   const [linkedEvents, setLinkedEvents] = useState([]);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,7 +39,9 @@ const ProgramDetails = () => {
         // Note: Using GET /api/programs and finding by ID since we don't have a single GET /api/programs/:id yet
         // but it's better to implement one. For now, filter local result to avoid backend changes if possible.
         const res = await axios.get(`${API_BASE_URL}/programs`);
-        const selectedItem = res.data.find((item) => item.id === Number(id));
+        console.log(res, "detais");
+
+        const selectedItem = res.data.find((item) => item._id === (id));
 
         if (selectedItem) {
           // Restore icons from labels (features are already parsed JSON from backend)
@@ -49,8 +54,11 @@ const ProgramDetails = () => {
           // Fetch Events linked to this program
           try {
             const eventsRes = await axios.get(`${API_BASE_URL}/events`);
+            console.log(eventsRes, "events");
+
             // Filter for events linked to this program AND status is 'approved'
-            const programEvents = eventsRes.data.filter(e => e.programId === Number(id) && e.status === 'approved');
+            const programEvents = eventsRes.data.filter(e => e.
+              programId === id && e.status === 'approved');
             setLinkedEvents(programEvents);
           } catch (e) {
             console.error("Events fetch error:", e);
@@ -63,37 +71,56 @@ const ProgramDetails = () => {
     fetchData();
   }, [id]);
 
+  // console.log(linkedEvents, "lin");
+  console.log(showDetail, "show");
+
+
   const handleDownload = () => {
-    if (!showDetail.brochure || typeof showDetail.brochure !== 'string') {
-      alert("No valid brochure available for this program. Please re-upload the brochure in the admin panel.");
+    if (!showDetail.brochure || typeof showDetail.brochure !== "string") {
+      alert(
+        "No valid brochure available for this program. Please re-upload the brochure in the admin panel."
+      );
       return;
     }
 
     try {
-      // If it's a base64 data URL (matching common PDF mime types or generic data URIs)
-      const isDataUrl = showDetail.brochure.startsWith('data:');
+      const isDataUrl = showDetail.brochure.startsWith("data:");
 
       if (isDataUrl) {
-        const link = document.createElement('a');
-        link.href = showDetail.brochure;
-        // Clean filename for different OS/browsers
-        const safeName = (showDetail.name || 'Program').replace(/[^a-z0-9]/gi, '_');
-        link.setAttribute('download', `${safeName}_Brochure.pdf`);
+        // Base64 → Blob download (can't open in tab directly)
+        const arr = showDetail.brochure.split(",");
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) u8arr[n] = bstr.charCodeAt(n);
+
+        const blob = new Blob([u8arr], { type: mime });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "Brochure.pdf");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-      } else if (showDetail.brochure.startsWith('http')) {
-        // Fallback for direct URLs
-        window.open(showDetail.brochure, '_blank');
+
+        URL.revokeObjectURL(url);
       } else {
-        alert("The brochure format is invalid. Please re-upload it.");
+        // Relative or absolute URL → open in new tab
+        const fileUrl = showDetail.brochure.startsWith("http")
+          ? showDetail.brochure
+          : `${API_BASE_URL}/uploads/${showDetail.brochure}`;
+
+        window.open(fileUrl, "_blank"); // ✅ opens in new tab
       }
     } catch (error) {
       console.error("Download failed:", error);
-      alert("Failed to download brochure. If the file is very large, it might have been corrupted during storage.");
+      alert(
+        "Failed to download or open brochure. Please check if the file exists or is corrupted."
+      );
     }
   };
-
   return showDetail ? (
     <div className="min-h-screen bg-gradient-to-br from-[#03050F] via-[#0a0d1f] to-[#03050F] text-white font-out relative overflow-hidden pt-20 px-3">
       {/* Background Effects */}
@@ -235,7 +262,7 @@ const ProgramDetails = () => {
 
                 <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/10">
                   <img
-                    src={showDetail.image || "https://via.placeholder.com/600x400"}
+                    src={`${API_BASE_URL}/uploads/${showDetail.images || "default-event.jpg"}`}
                     alt={showDetail.name}
                     className="w-full h-80 md:h-96 object-cover transform group-hover:scale-105 transition-transform duration-700"
                   />
@@ -266,8 +293,8 @@ const ProgramDetails = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {linkedEvents.map(event => (
               <div
-                key={event.id}
-                onClick={() => navigate(`/eventdetails/${event.id}`)}
+                key={event._id}
+                onClick={() => navigate(`/eventdetails/${event._id}`)}
                 className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-lg border border-white/10 hover:border-blue-500/50 shadow-xl hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500 cursor-pointer transform hover:-translate-y-2"
               >
                 {/* Glow Effect */}
@@ -276,7 +303,7 @@ const ProgramDetails = () => {
                 {/* Image Container */}
                 <div className="relative overflow-hidden">
                   <img
-                    src={event.poster || "https://via.placeholder.com/300"}
+                    src={`${API_BASE_URL}/uploads/${event.poster || "default-event.jpg"}`}
                     alt={event.eventName}
                     className="w-full h-48 object-cover transform group-hover:scale-110 transition-transform duration-700"
                   />

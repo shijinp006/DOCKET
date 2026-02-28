@@ -14,10 +14,10 @@ const programSchema = new mongoose.Schema(
       trim: true,
     },
 
-    image: {
-      type: String, // store image URL or file path
-    },
+    images: {
+      type: String,
 
+    },
     brochure: {
       type: String, // store brochure file path or URL
     },

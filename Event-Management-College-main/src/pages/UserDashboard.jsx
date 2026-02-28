@@ -85,20 +85,24 @@ const UserDashboard = () => {
     try {
       const [eventsRes, regsRes, attRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/events`),
-        axios.get(`${API_BASE_URL}/registrations/user/${user.id}`),
+        axios.get(`${API_BASE_URL}/registrations/user/${user._id}`),
         axios.get(`${API_BASE_URL}/attendance`)
       ]);
 
+      console.log(regsRes, "reg");
+
       const allEvents = eventsRes.data;
-      const myRegistrations = regsRes.data;
+      const myRegistrations = regsRes.data?.data || [];
       const attendanceRecords = attRes.data;
 
       const myEvents = myRegistrations.map(reg => {
-        const eventDetails = allEvents.find(e => Number(e.id) === Number(reg.eventId));
+        const eventDetails = allEvents.find(e => e._id === reg.eventId?._id);
         if (!eventDetails) return null;
 
+ 
+
         const attendanceRecord = attendanceRecords.find(
-          att => String(att.userId) === String(user.id) && Number(att.eventId) === Number(reg.eventId)
+          att => String(att.userId) === String(user._id) && String(att.eventId) === String(reg.eventId._id)
         );
 
         return {
@@ -109,6 +113,9 @@ const UserDashboard = () => {
           isUpcoming: new Date(eventDetails.date) > new Date()
         };
       }).filter(Boolean);
+      
+     console.log(myEvents,"events");
+         
 
       const upcoming = myEvents.filter(e => e.isUpcoming).length;
       const completed = myEvents.filter(e => !e.isUpcoming).length;
@@ -135,8 +142,8 @@ const UserDashboard = () => {
   const handleAttendance = async (eventId) => {
     try {
       await axios.post(`${API_BASE_URL}/attendance`, {
-        eventId: Number(eventId),
-        userId: user.id,
+        eventId: (eventId),
+        userId: user._id,
         status: 'pending'
       });
       setShowAttendanceModal(true);
@@ -325,7 +332,7 @@ const UserDashboard = () => {
                             return (
                               <>
                                 <button
-                                  onClick={() => handleAttendance(event.id)}
+                                  onClick={() => handleAttendance(event._id)}
                                   disabled={event.attended || !isWithinRange}
                                   className={`w-full py-2 rounded-lg font-medium transition ${event.attended
                                     ? 'bg-yellow-600/50 text-white cursor-not-allowed'

@@ -17,6 +17,7 @@ const Registrations = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
+
   useEffect(() => {
     loadData();
   }, []);
@@ -30,8 +31,11 @@ const Registrations = () => {
         axios.get(`${API_BASE_URL}/users`)
       ]);
 
+      // console.log(eventsRes,"event Res",regsRes, "registration", studentsRes , "students");
+      
+
       setEvents(eventsRes.data);
-      setRegistrations(regsRes.data);
+      setRegistrations(regsRes.data?.data || []);
       setUsers(studentsRes.data);
     } catch (error) {
       console.error("Load error:", error);

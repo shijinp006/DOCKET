@@ -1,6 +1,8 @@
 import axios from "axios";
 import { useEffect } from "react";
 import { useState } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const API_BASE_URL = " http://localhost:5000/api";
 
@@ -75,10 +77,9 @@ const AddReports = () => {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
     if (!formData.programName.trim()) {
       toast.error("Please select a program");
       return;
@@ -94,44 +95,34 @@ const AddReports = () => {
       return;
     }
 
-    // Get existing reports from localStorage
-    // const existingReports = JSON.parse(
-    //   localStorage.getItem(STORAGE_KEY) || "[]"
-    // );
+    try {
+      const data = new FormData();
 
-    // Convert image to base64 for storage
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const newReportItems = {
-        programName: formData.programName,
-        image: reader.result, // base64 string
-        description: formData.description,
-      };
+      data.append("programName", formData.programName);
+      data.append("description", formData.description);
+      data.append("file", formData.image); // 🔥 actual file
 
-      try {
-        await axios.post(`${API_BASE_URL}/reports`, newReportItems);
+      await axios.post(`${API_BASE_URL}/reports`, data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-        // Reset form
-        setFormData({
-          programName: "",
-          image: null,
-          description: "",
-        });
-        setSearchTerm("");
-        setImagePreview(null);
+      setFormData({
+        programName: "",
+        image: null,
+        description: "",
+      });
 
-        toast.success("Report added successfully!");
-      } catch (error) {
-        console.error("Report error:", error);
-        toast.error("Failed to submit report.");
-      }
-    };
+      setSearchTerm("");
+      setImagePreview(null);
 
-    reader.onerror = () => {
-      toast.error("Error reading image file");
-    };
+      toast.success("Report added successfully!");
 
-    reader.readAsDataURL(formData.image);
+    } catch (error) {
+      console.error("Report error:", error);
+      toast.error("Failed to submit report.");
+    }
   };
 
   return (

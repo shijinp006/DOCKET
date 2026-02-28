@@ -30,9 +30,12 @@ const Attendence = () => {
         axios.get(`${API_BASE_URL}/users`)
       ]);
 
+      console.log(eventsRes,"event" , attRes,"attres" , regsRes, "regs", studentsRes, "students");
+      
+
       setEvents(eventsRes.data);
       setAttendanceRecords(attRes.data);
-      setRegistrations(regsRes.data);
+      setRegistrations(regsRes.data?.data);
       setUsers(studentsRes.data);
     } catch (error) {
       console.error("Load error:", error);

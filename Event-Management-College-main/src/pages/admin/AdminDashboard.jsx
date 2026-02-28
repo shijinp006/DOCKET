@@ -18,8 +18,8 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [teachers, setTeachers] = useState([])
   console.log(recentEvents, "recent events");
-  console.log(teachers,"teachers");
-  
+  console.log(teachers, "teachers");
+
 
 
   const fetchDashboardData = async () => {
@@ -45,7 +45,12 @@ const AdminDashboard = () => {
 
 
       const now = new Date()
-      const upcoming = allEvents.filter(event => new Date(event.date) >= now).length
+      const upcoming = allEvents.filter(event => {
+        const eventDate = new Date(event.date); // parse string to Date
+        return !isNaN(eventDate) && eventDate >= now; // check it's valid and compare
+      }).length
+      console.log(upcoming,"upcoming");
+      
       const completed = allEvents.length - upcoming
 
       setStats({

@@ -7,6 +7,8 @@ import User from "../../Models/User/UserSchema.js";
 export const getRegistrationsByUser = async (req, res) => {
   try {
     const { userId } = req.params;
+   
+    
 
     // 1️⃣ Find the user
     const user = await User.findById(userId);

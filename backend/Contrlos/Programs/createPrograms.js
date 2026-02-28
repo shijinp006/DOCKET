@@ -5,8 +5,6 @@ export const createProgram = async (req, res) => {
     const {
       name,
       category,
-      image,
-      brochure,
       title,
       programDate,
       programTime,
@@ -16,9 +14,21 @@ export const createProgram = async (req, res) => {
     // console.log(req.body,"body");
     
 
+    // console.log(req.files, "files");
 
+    let imagePath = null;
+    let brochurePath = null;
 
-    // Basic validation
+    if (req.files && req.files.length > 0) {
+      req.files.forEach(file => {
+        if (file.mimetype === "application/pdf") {
+          brochurePath = file.filename;
+        } else if (file.mimetype.startsWith("image/")) {
+          imagePath = file.filename; // only one image
+        }
+      });
+    }
+
     if (
       !name ||
       !category ||
@@ -31,18 +41,29 @@ export const createProgram = async (req, res) => {
         error: "All required fields must be provided",
       });
     }
+let parsedFeatures = [];
 
-  
+if (features) {
+  try {
+    parsedFeatures =
+      typeof features === "string"
+        ? JSON.parse(features)
+        : features;
+  } catch (err) {
+    console.log("Invalid features JSON");
+    parsedFeatures = [];
+  }
+}
     const newProgram = await Program.create({
       name: name.trim(),
       category: category.trim(),
-      image,
-      brochure,
+      images: imagePath,
+      brochure: brochurePath,
       title: title.trim(),
       programDate: new Date(programDate),
       programTime,
       description: description.trim(),
-      features: Array.isArray(features) ? features : [],
+      features: parsedFeatures
     });
 
     return res.status(201).json({

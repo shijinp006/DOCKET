@@ -71,7 +71,7 @@ const AddEvent = () => {
 
 
       // console.log(teachersRes,"teachers");
-      
+
       setPrograms(programsRes.data);
       setTeachers(teachersRes.data?.data);
 
@@ -106,36 +106,33 @@ const AddEvent = () => {
     }
   };
 
-  const toBase64 = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
+  // const toBase64 = (file) => new Promise((resolve, reject) => {
+  //   const reader = new FileReader();
+  //   reader.readAsDataURL(file);
+  //   reader.onload = () => resolve(reader.result);
+  //   reader.onerror = error => reject(error);
+  // });
 
-  const handlePosterImage = async (e) => {
+  const handlePosterImage = (e) => {
     if (e.target.files[0]) {
-      const base64 = await toBase64(e.target.files[0]);
-      setEventData((prev) => ({ ...prev, poster: base64 }));
+      setEventData((prev) => ({ ...prev, poster: e.target.files[0] }));
     }
   };
 
-  const handlePriceImage = async (e) => {
+  const handlePriceImage = (e) => {
     if (e.target.files[0]) {
-      const base64 = await toBase64(e.target.files[0]);
-      setEventData((prev) => ({ ...prev, priceImage: base64 }));
+      setEventData((prev) => ({ ...prev, priceImage: e.target.files[0] }));
     }
   };
 
-  const handleSponsorImages = async (e) => {
+  const handleSponsorImages = (e) => {
     const files = Array.from(e.target.files);
-    const base64Files = await Promise.all(files.map(f => toBase64(f)));
+
     setEventData((prev) => ({
       ...prev,
-      sponsorImages: [...prev.sponsorImages, ...base64Files].slice(0, 3),
+      sponsorImages: [...prev.sponsorImages, ...files].slice(0, 3),
     }));
   };
-
   const removeSponsorImage = (index) => {
     setEventData((prev) => ({
       ...prev,
@@ -145,19 +142,53 @@ const AddEvent = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    console.log(eventData, "eventData");
+
     if (!eventData.programId) {
       toast.error("Please select a program");
       return;
     }
 
     try {
+      const formData = new FormData();
+
+      // 🔹 Append normal fields (exclude image fields)
+      Object.keys(eventData).forEach((key) => {
+
+        if (
+          key !== "poster" &&
+          key !== "priceImage" &&
+          key !== "sponsorImages"
+        ) {
+          formData.append(key, eventData[key]);
+        }
+      });
+
+      // 🔥 Append ALL images using same name "file"
+
+      if (eventData.poster) {
+        formData.append("file", eventData.poster);
+      }
+
+      if (eventData.priceImage) {
+        formData.append("file", eventData.priceImage);
+      }
+
+      if (eventData.sponsorImages.length > 0) {
+        eventData.sponsorImages.forEach((img) => {
+          formData.append("file", img);
+        });
+      }
+
       if (isEditMode) {
-        await axios.put(`${API_BASE_URL}/events/${id}`, eventData);
+        await axios.put(`${API_BASE_URL}/events/${id}`, formData);
         toast.success("Event updated successfully!");
       } else {
-        await axios.post(`${API_BASE_URL}/events`, eventData);
+        await axios.post(`${API_BASE_URL}/events`, formData);
         toast.success("Event created successfully!");
       }
+
       navigate(-1);
     } catch (error) {
       console.error("Submit error:", error);
@@ -397,19 +428,27 @@ const AddEvent = () => {
                       const isSelected = eventData.incharge.split(", ").includes(teacher.name);
                       return (
                         <label
-                          key={teacher.id}
+                          key={teacher._id}
                           className={`flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer group ${isSelected ? 'bg-violet-600/20 border-violet-500/50' : 'bg-white/[0.02] border-white/5 hover:border-white/20'
                             }`}
                         >
                           <input
                             type="checkbox"
-                            value={teacher.name}
+                            value={`${teacher._id}`}
                             checked={isSelected}
                             onChange={(e) => {
-                              const name = e.target.value;
-                              const currentIncharges = eventData.incharge ? eventData.incharge.split(", ") : [];
-                              let newIncharges = e.target.checked ? [...currentIncharges, name] : currentIncharges.filter(i => i !== name);
-                              setEventData(prev => ({ ...prev, incharge: newIncharges.join(", ") }));
+                              const id = e.target.value;
+                              setEventData(prev => ({
+                                ...prev,
+                                incharge: (
+                                  e.target.checked
+                                    ? [...(prev.incharge?.split(", ") || []), id]
+                                    : (prev.incharge?.split(", ") || []).filter(i => i !== id)
+                                )
+                                  .map(i => teachers.find(t => t._id === i)?.name)
+                                  .filter(Boolean)
+                                  .join(", ")
+                              }));
                             }}
                             className="hidden"
                           />
@@ -426,7 +465,9 @@ const AddEvent = () => {
                     })
                 )}
               </div>
-              <p className="text-[10px] font-black text-violet-400 mt-6 text-center uppercase tracking-widest">Selected: {eventData.incharge || "None"}</p>
+              <p className="text-[10px] font-black text-violet-400 mt-6 text-center uppercase tracking-widest">Selected:{eventData.incharge
+                ? eventData.incharge.split(", ").map(name => teachers.find(t => t.name === name)?.name).join(", ")
+                : ""}</p>
             </div>
           </div>
 
@@ -549,7 +590,7 @@ const AddEvent = () => {
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 block ml-1">Master Poster</label>
                 <div className="relative group aspect-square rounded-[2rem] bg-white/[0.02] border-2 border-dashed border-white/10 hover:border-blue-500/30 transition-all flex flex-col items-center justify-center p-6 text-center cursor-pointer overflow-hidden">
                   {eventData.poster ? (
-                    <img src={eventData.poster} className="absolute inset-0 w-full h-full object-cover" alt="Poster" />
+                    <img src={URL.createObjectURL(eventData.poster)} className="absolute inset-0 w-full h-full object-cover" alt="Poster" />
                   ) : (
                     <div className="space-y-3">
                       <FaCloudUploadAlt className="text-3xl text-gray-700 group-hover:text-blue-400 transition-all mx-auto" />
@@ -565,7 +606,7 @@ const AddEvent = () => {
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 block ml-1">Grand Prize</label>
                 <div className="relative group aspect-square rounded-[2rem] bg-white/[0.02] border-2 border-dashed border-white/10 hover:border-amber-500/30 transition-all flex flex-col items-center justify-center p-6 text-center cursor-pointer overflow-hidden">
                   {eventData.priceImage ? (
-                    <img src={eventData.priceImage} className="absolute inset-0 w-full h-full object-cover" alt="Price" />
+                    <img src={URL.createObjectURL(eventData.priceImage)} className="absolute inset-0 w-full h-full object-cover" alt="Price" />
                   ) : (
                     <div className="space-y-3">
                       <FaTrophy className="text-3xl text-gray-700 group-hover:text-amber-500 transition-all mx-auto" />
@@ -583,7 +624,7 @@ const AddEvent = () => {
                   <div className="grid grid-cols-2 gap-2 h-full">
                     {eventData.sponsorImages.map((img, i) => (
                       <div key={i} className="relative rounded-xl overflow-hidden border border-white/10 aspect-square">
-                        <img src={img} className="w-full h-full object-cover" />
+                        <img src={URL.createObjectURL(img)} className="w-full h-full object-cover" />
                         <button
                           type="button"
                           onClick={() => removeSponsorImage(i)}

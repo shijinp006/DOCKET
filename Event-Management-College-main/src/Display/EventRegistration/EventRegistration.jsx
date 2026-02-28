@@ -43,17 +43,21 @@ const EventRegistration = () => {
         navigate("/login");
         return;
       }
-      if (loggedInUser.role === "teacher" || loggedInUser.role === "admin") {
-        toast.warning("Instructional Staff are restricted from dynamic registration.");
-        navigate(-1);
-        return;
-      }
+        if (loggedInUser.role === "teacher" || loggedInUser.role === "admin") {
+          toast.warning("Instructional Staff are restricted from dynamic registration.");
+          navigate(-1);
+          return;
+        }
       setUser(loggedInUser);
 
       try {
         // 2. Load Event
         const eventsRes = await axios.get(`${API_BASE_URL}/events`);
-        const foundEvent = eventsRes.data.find((e) => e.id === Number(id));
+        console.log(eventsRes,"eventsresss");
+        
+        const foundEvent = eventsRes.data.find((e) => e._id === (id));
+        console.log(foundEvent,"found");
+        
         if (!foundEvent) {
           toast.error("Event not found");
           navigate(-1);
@@ -165,8 +169,8 @@ const EventRegistration = () => {
     setShowConfirm(false);
 
     const registrationData = {
-      eventId: event.id,
-      userId: user.id,
+      eventId: event._id,
+      userId: user._id,
       userName: user.name,
       userEmail: user.email,
       registeredUserDept: user.department,

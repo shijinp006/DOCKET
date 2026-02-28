@@ -36,7 +36,9 @@ const EventDetails = () => {
     const fetchEvent = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/events`);
-        const foundEvent = res.data.find((e) => e.id === Number(id));
+        console.log(res,"eventsres");
+        
+        const foundEvent = res.data.find((e) => e._id === (id));
         setEvent(foundEvent);
       } catch (error) {
         console.error("Fetch error:", error);
@@ -50,15 +52,15 @@ const EventDetails = () => {
     const checkRegistration = async () => {
       if (!user.id || !event) return;
       try {
-        const res = await axios.get(`${API_BASE_URL}/registrations/user/${user.id}`);
-        const registered = res.data.some(r => Number(r.eventId) === Number(event.id));
+        const res = await axios.get(`${API_BASE_URL}/registrations/user/${user._id}`);
+        const registered = res.data.some(r => r.eventId === event._id);
         setIsRegistered(registered);
       } catch (error) {
         console.error("Check registration error:", error);
       }
     };
     checkRegistration();
-  }, [user.id, event]);
+  }, [user._id, event]);
 
   const isPastEvent = () => {
     if (!event) return false;
@@ -86,7 +88,7 @@ const EventDetails = () => {
     if (event.participationType === "individual") {
       setShowConfirm(true);
     } else {
-      navigate(`/event/${event.id}/register`);
+      navigate(`/event/${event._id}/register`);
     }
   };
 
@@ -159,7 +161,7 @@ const EventDetails = () => {
             >
               <div className="aspect-[21/9] relative">
                 <img
-                  src={event.poster || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200"}
+                  src={event.poster ? `${API_BASE_URL}/uploads/${event.poster}` : "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200"}
                   alt={event.eventName}
                   className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-700 group-hover:scale-105"
                 />
@@ -247,7 +249,7 @@ const EventDetails = () => {
                 </div>
                 <div className="relative group overflow-hidden rounded-[2rem] border border-white/10 bg-black/20">
                   <img
-                    src={event.priceImage}
+                    src={event.priceImage ? `${API_BASE_URL}/uploads/${event.priceImage}` : ""}
                     alt="Price Details"
                     className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700"
                   />

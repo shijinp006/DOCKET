@@ -69,81 +69,76 @@ const TeacherAddProgram = () => {
   };
 
   // Helper to convert file to Base64
-  const toBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    let imageBase64 = null;
+    const formData = new FormData();
+
+    formData.append("name", name);
+    formData.append("category", category);
+    formData.append("title", title);
+    formData.append("programDate", date);
+    formData.append("programTime", time);
+    formData.append("description", description);
+    formData.append("features", JSON.stringify(features));
+    formData.append("subject", "New Program Launched!");
+    formData.append(
+      "message",
+      `A new program "${name}" has been launched. Check it out!`
+    );
+    formData.append("senderRole", "teacher");
+    formData.append("recipientType", "all");
+
+    // ✅ Append real image file
     if (image) {
-      try {
-        imageBase64 = await toBase64(image);
-      } catch (error) {
-        console.error("Error converting image:", error);
-        alert("Error processing image");
-        return;
-      }
+      formData.append("file", image);
     }
 
-    let brochureBase64 = null;
+    // ✅ Append real brochure file
     if (brochure) {
-      try {
-        brochureBase64 = await toBase64(brochure);
-      } catch (error) {
-        console.error("Error converting brochure:", error);
-        alert("Error processing brochure");
-        return;
-      }
+      formData.append("file", brochure);
     }
-
-    const newProgram = {
-      name: name,
-      category: category,
-      image: imageBase64,
-      brochure: brochureBase64,
-      title: title,
-      programDate: date,
-      programTime: time,
-      description: description,
-      features: features,
-    };
 
     try {
-      await axios.post(`${API_BASE_URL}/programs`, newProgram);
-      toast.success("Program created successfully and saved!");
+      // if (existingProgram) {
+      //   await axios.put(
+      //     `${API_BASE_URL}/programs/${existingProgram._id}`,
+      //     formData,
+      //     {
+      //       headers: { "Content-Type": "multipart/form-data" }
+      //     }
+      //   );
 
-      // Trigger notification for all users
-      try {
-        await axios.post(`${API_BASE_URL}/notifications`, {
-          subject: "New Program Launched!",
-          message: `A new program "${name}" has been launched. Check it out!`,
-          image: imageBase64,
-          senderRole: "teacher",
-          recipientType: "all"
-        });
-      } catch (notificationError) {
-        console.error("Failed to send notification:", notificationError);
-      }
+      //   toast.success("Program refined successfully!");
+      // } else {
+        await axios.post(
+          `${API_BASE_URL}/programs`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" }
+          }
+        );
 
-      // Reset form
-      setName("");
-      setTitle("");
-      setCategory("");
-      setImage(null);
-      setBrochure(null);
-      setDate("");
-      setTime("");
-      setDescription("");
-      setFeatures([]);
+        toast.success("New program launched successfully!");
+
+        // 🔔 Send notification (no file needed here unless required)
+        await axios.post(
+          `${API_BASE_URL}/notifications`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+      
+
+      // navigate(-1);
     } catch (error) {
       console.error("Save error:", error);
-      toast.error(error.response?.data?.error || "Failed to save program.");
+      toast.error(error.response?.data?.error || "Failed to save program details.");
     }
   };
 

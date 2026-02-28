@@ -1,7 +1,8 @@
 import Event from "../../Models/Events/eventsSchema.js";
 
 export const getAllEvents = async (req, res) => {
-  console.log("kkk");
+console.log("kkkk");
+
   
   
   try {
@@ -9,6 +10,7 @@ export const getAllEvents = async (req, res) => {
       .sort({ date: 1 }) // upcoming first
       .populate("programId", "name category") // optional
       .lean();
+// console.log(events,"events");
 
     return res.json(events);
 

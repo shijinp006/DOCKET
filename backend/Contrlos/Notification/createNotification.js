@@ -1,21 +1,20 @@
 import Notification from "../../Models/Notification/notificationSchema.js";
 
-/**
- * Create Notification
- */
 export const createNotification = async (req, res) => {
   try {
     const {
       subject,
       message,
-      image,
       senderRole,
       recipientType,
       recipientId,
       canReply,
     } = req.body;
 
-    // Basic validation
+    console.log(req.body, "notification body");
+    console.log(req.files, "notification files");
+
+    // 🔎 Validation
     if (!subject || !message || !senderRole || !recipientType) {
       return res.status(400).json({
         success: false,
@@ -23,26 +22,43 @@ export const createNotification = async (req, res) => {
       });
     }
 
+    let images = null;
+    let brochure = null;
+
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        if (file.mimetype === "application/pdf") {
+          brochure = file.filename; // only one brochure allowed
+        }
+        else if (file.mimetype.startsWith("image/")) {
+          images = file.filename; // allow only one image (overwrite previous)
+        }
+      }
+    }
+
     const notification = await Notification.create({
-      subject,
-      message,
-      image: image || null,
+      subject: subject.trim(),
+      message: message.trim(),
+      images,          // array of images
+      brochure,        // single PDF
       senderRole,
       recipientType,
       recipientId: recipientType === "individual" ? recipientId : null,
-      canReply: canReply !== undefined ? canReply : true,
-      replies: [], // default empty
+      canReply: canReply ?? true,
+      replies: [],
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Notification sent successfully",
       data: notification,
     });
+
   } catch (error) {
-    res.status(500).json({
+    console.error("Create notification error:", error);
+    return res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Server error",
     });
   }
 };

@@ -15,6 +15,8 @@ export const createRegistration = async (req, res) => {
       teamData,
       status,
     } = req.body;
+    console.log(req.body,"body111");
+    
 
     // 🔍 Prevent duplicate registration (same user for same event)
     const existingRegistration = await Registration.findOne({

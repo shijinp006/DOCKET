@@ -61,7 +61,7 @@ const AddEvent = () => {
           axios.get(`${API_BASE_URL}/registered-teachers`)
         ]);
         // console.log(programsRes,"pr res" , teachersRes,"tec");
-        
+
         setPrograms(programsRes.data);
         setTeachers(teachersRes.data?.data);
       } catch (error) {
@@ -89,33 +89,25 @@ const AddEvent = () => {
     }
   };
 
-  const toBase64 = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
 
-  const handlePosterImage = async (e) => {
+  const handlePosterImage = (e) => {
     if (e.target.files[0]) {
-      const base64 = await toBase64(e.target.files[0]);
-      setEventData((prev) => ({ ...prev, poster: base64 }));
+      setEventData((prev) => ({ ...prev, poster: e.target.files[0] }));
     }
   };
 
-  const handlePriceImage = async (e) => {
+  const handlePriceImage = (e) => {
     if (e.target.files[0]) {
-      const base64 = await toBase64(e.target.files[0]);
-      setEventData((prev) => ({ ...prev, priceImage: base64 }));
+      setEventData((prev) => ({ ...prev, priceImage: e.target.files[0] }));
     }
   };
 
-  const handleSponsorImages = async (e) => {
+  const handleSponsorImages = (e) => {
     const files = Array.from(e.target.files);
-    const base64Files = await Promise.all(files.map(f => toBase64(f)));
+
     setEventData((prev) => ({
       ...prev,
-      sponsorImages: [...prev.sponsorImages, ...base64Files].slice(0, 3),
+      sponsorImages: [...prev.sponsorImages, ...files].slice(0, 3),
     }));
   };
 
@@ -129,41 +121,49 @@ const AddEvent = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    console.log(eventData, "eventData");
+
     if (!eventData.programId) {
       toast.error("Please select a program");
       return;
     }
 
     try {
-      await axios.post(`${API_BASE_URL}/events`, {
-        ...eventData,
-        status: "pending"
+      const formData = new FormData();
+
+      // 🔹 Append normal fields (exclude image fields)
+      Object.keys(eventData).forEach((key) => {
+
+        if (
+          key !== "poster" &&
+          key !== "priceImage" &&
+          key !== "sponsorImages"
+        ) {
+          formData.append(key, eventData[key]);
+        }
       });
-      toast.success("Event created successfully! Sent for approval.");
-      // Clear form
-      setEventData({
-        programName: eventData.programName,
-        programId: eventData.programId,
-        eventName: "",
-        description: "",
-        date: "",
-        startTime: "",
-        endTime: "",
-        venue: "",
-        latitude: "",
-        longitude: "",
-        incharge: "",
-        department: "",
-        limit: "",
-        poster: null,
-        priceImage: null,
-        sponsorImages: [],
-        participationType: "individual",
-        overallIndividualLimit: "",
-        departmentIndividualLimit: "",
-        membersPerTeamFromDepartment: "",
-        teamsPerDepartment: "",
-      });
+
+      // 🔥 Append ALL images using same name "file"
+
+      if (eventData.poster) {
+        formData.append("file", eventData.poster);
+      }
+
+      if (eventData.priceImage) {
+        formData.append("file", eventData.priceImage);
+      }
+
+      if (eventData.sponsorImages.length > 0) {
+        eventData.sponsorImages.forEach((img) => {
+          formData.append("file", img);
+        });
+      }
+
+      await axios.post(`${API_BASE_URL}/events`, formData);
+      toast.success("Event created successfully!");
+
+
+      // navigate(-1);
     } catch (error) {
       console.error("Submit error:", error);
       toast.error(error.response?.data?.error || "Failed to save event.");
@@ -384,26 +384,33 @@ const AddEvent = () => {
                       t.department.toLowerCase().includes(teacherSearch.toLowerCase())
                     )
                     .map((teacher) => {
-                      const isSelected = eventData.incharge.includes(teacher._id);
+                      const isSelected = eventData.incharge.includes(teacher.name);
                       return (
                         <label
                           key={teacher._id}
                           className={`flex items-center gap-4 p-4 rounded-2xl border transition-all cursor-pointer group ${isSelected ? 'bg-violet-600/20 border-violet-500/50' : 'bg-white/[0.02] border-white/5 hover:border-white/20'
                             }`}
                         >
-                            <input
-                              type="checkbox"
-                              value={`${teacher._id}`}
-                              checked={isSelected}
-                              onChange={(e) => {
-                                const id = e.target.value;
-                          
-                                const currentIncharges = eventData.incharge ? eventData.incharge.split(", ") : [];
-                                let newIncharges = e.target.checked ? [...currentIncharges, id] : currentIncharges.filter(i => i !== id);
-                                setEventData(prev => ({ ...prev, incharge: newIncharges.join(", ") }));
-                              }}
-                              className="hidden"
-                            />
+                          <input
+                            type="checkbox"
+                            value={`${teacher._id}`}
+                            checked={isSelected}
+                            onChange={(e) => {
+                              const id = e.target.value;
+                              setEventData(prev => ({
+                                ...prev,
+                                incharge: (
+                                  e.target.checked
+                                    ? [...(prev.incharge?.split(", ") || []), id]
+                                    : (prev.incharge?.split(", ") || []).filter(i => i !== id)
+                                )
+                                  .map(i => teachers.find(t => t._id === i)?.name)
+                                  .filter(Boolean)
+                                  .join(", ")
+                              }));
+                            }}
+                            className="hidden"
+                          />
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isSelected ? 'bg-violet-600 text-white' : 'bg-white/5 text-gray-500 group-hover:text-gray-300'
                             }`}>
                             <FaUserTie />
@@ -418,8 +425,8 @@ const AddEvent = () => {
                 )}
               </div>
               <p className="text-[10px] font-black text-violet-400 mt-6 text-center uppercase tracking-widest">Selected:{eventData.incharge
-    ? eventData.incharge.split(", ").map(id => teachers.find(t => t._id === id)?.name).join(", ")
-    : "None"}</p>
+                ? eventData.incharge.split(", ").map(name => teachers.find(t => t.name === name)?.name).join(", ")
+                : ""}</p>
             </div>
           </div>
 
@@ -542,7 +549,7 @@ const AddEvent = () => {
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 block ml-1">Master Poster</label>
                 <div className="relative group aspect-square rounded-[2rem] bg-white/[0.02] border-2 border-dashed border-white/10 hover:border-blue-500/30 transition-all flex flex-col items-center justify-center p-6 text-center cursor-pointer overflow-hidden">
                   {eventData.poster ? (
-                    <img src={eventData.poster} className="absolute inset-0 w-full h-full object-cover" alt="Poster" />
+                    <img src={URL.createObjectURL(eventData.poster)} className="absolute inset-0 w-full h-full object-cover" alt="Poster" />
                   ) : (
                     <div className="space-y-3">
                       <FaCloudUploadAlt className="text-3xl text-gray-700 group-hover:text-blue-400 transition-all mx-auto" />
@@ -558,7 +565,7 @@ const AddEvent = () => {
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 block ml-1">Grand Prize</label>
                 <div className="relative group aspect-square rounded-[2rem] bg-white/[0.02] border-2 border-dashed border-white/10 hover:border-amber-500/30 transition-all flex flex-col items-center justify-center p-6 text-center cursor-pointer overflow-hidden">
                   {eventData.priceImage ? (
-                    <img src={eventData.priceImage} className="absolute inset-0 w-full h-full object-cover" alt="Price" />
+                    <img src={URL.createObjectURL(eventData.priceImage)} className="absolute inset-0 w-full h-full object-cover" alt="Price" />
                   ) : (
                     <div className="space-y-3">
                       <FaTrophy className="text-3xl text-gray-700 group-hover:text-amber-500 transition-all mx-auto" />
@@ -576,7 +583,7 @@ const AddEvent = () => {
                   <div className="grid grid-cols-2 gap-2 h-full">
                     {eventData.sponsorImages.map((img, i) => (
                       <div key={i} className="relative rounded-xl overflow-hidden border border-white/10 aspect-square">
-                        <img src={img} className="w-full h-full object-cover" />
+                        <img src={URL.createObjectURL(img)} className="w-full h-full object-cover" />
                         <button
                           type="button"
                           onClick={() => removeSponsorImage(i)}

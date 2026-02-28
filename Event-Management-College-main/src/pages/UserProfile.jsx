@@ -3,6 +3,7 @@ import { useAppContext } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCamera, FaUser, FaEnvelope, FaPhone, FaIdCard, FaUniversity, FaGraduationCap, FaChalkboardTeacher, FaVenusMars, FaBook, FaSave, FaTimes, FaEdit, FaTrash, FaEllipsisV } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
 const UserProfile = () => {
     const { user, setUser } = useAppContext();
@@ -10,46 +11,90 @@ const UserProfile = () => {
     const [displayUser, setDisplayUser] = useState(null);
     const [editData, setEditData] = useState(null);
     const [showMenu, setShowMenu] = useState(false);
+    const API_BASE_URL = " http://localhost:5000/api";
+
+
+
 
     useEffect(() => {
-        const storedUser = JSON.parse(localStorage.getItem('user'));
-        if (storedUser) {
-            setDisplayUser(storedUser);
-            setEditData(storedUser);
-            if (!user) setUser(storedUser);
-        } else if (user) {
-            setDisplayUser(user);
-            setEditData(user);
-        }
+        const fetchUser = async () => {
+            try {
+                const token = localStorage.getItem("token");
+                const storedUser = JSON.parse(localStorage.getItem("user"));
+                console.log(storedUser, "user");
+
+
+                if (!token) return;
+
+                const res = await axios.get(
+                    `${API_BASE_URL}/users`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                        params: {
+                            role: storedUser.role,
+                            _id: storedUser._id,
+                        },
+                    }
+                );
+
+                console.log(res, "User Data");
+
+                const fetchedUser = res.data?.data;
+
+
+                setDisplayUser(fetchedUser);
+                setEditData(fetchedUser);
+                if (!user) setUser(fetchedUser);
+
+            } catch (error) {
+                console.error("Fetch user error:", error.response?.data || error.message);
+            }
+        };
+
+        fetchUser();
     }, [user, setUser]);
 
-    const toBase64 = (file) =>
-        new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = (error) => reject(error);
-        });
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
-        if (file) {
-            try {
-                const base64 = await toBase64(file);
-                const updatedUser = { ...displayUser, image: base64 };
-                setDisplayUser(updatedUser);
-                setEditData(updatedUser);
-                setUser(updatedUser);
-                localStorage.setItem('user', JSON.stringify(updatedUser));
-                toast.success("Profile image updated!");
-            } catch (error) {
-                console.error("Error uploading image:", error);
-                toast.error("Failed to upload image");
-            }
+        if (!file) return;
+
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const token = localStorage.getItem("token");
+            const storedUser = JSON.parse(localStorage.getItem("user"));
+            const id = storedUser._id;
+
+            const res = await axios.put(
+                `${API_BASE_URL}/profile-picture/${id}`, // user's id
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+
+            // Backend should return updated user with profilePicture
+            const updatedUser = res.data.data;
+
+            setEditData(updatedUser);
+            setDisplayUser(updatedUser);
+            setUser(updatedUser); // optional, if you manage global user state
+
+            toast.success("Profile image updated!");
             setShowMenu(false);
+
+        } catch (error) {
+            console.error("Image upload error:", error.response?.data || error.message);
+            toast.error("Failed to upload image");
         }
     };
-
     const handleRemoveImage = () => {
         const updatedUser = { ...displayUser, image: null };
         setDisplayUser(updatedUser);
@@ -59,12 +104,46 @@ const UserProfile = () => {
         toast.info("Profile image removed.");
     };
 
-    const handleSave = () => {
-        setUser(editData);
-        localStorage.setItem('user', JSON.stringify(editData));
-        setDisplayUser(editData);
-        setIsEditing(false);
-        toast.success("Profile updated successfully!");
+    const handleSave = async () => {
+        try {
+            const storedUser = JSON.parse(localStorage.getItem("user"));
+            const id = storedUser._id;
+
+            const token = localStorage.getItem("token");
+
+            // Prepare the updated user data
+            const updatedData = {
+                name: editData.name,
+                mobile: editData.mobile || "",
+                department: editData.department || "",
+                gender: editData.gender || "",
+                // Add any other fields you want to update here
+            };
+
+            // Send as JSON instead of FormData
+            const res = await axios.put(
+                `${API_BASE_URL}/users/${id}`,
+                updatedData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            const updatedUser = res.data.data;
+
+            setUser(updatedUser);
+            setDisplayUser(updatedUser);
+            setEditData(updatedUser);
+            setIsEditing(false);
+
+            toast.success("Profile updated successfully!");
+        } catch (error) {
+            console.error("Update error:", error.response?.data || error.message);
+            toast.error("Failed to update profile");
+        }
     };
 
     const handleCancel = () => {
@@ -123,9 +202,9 @@ const UserProfile = () => {
                                     whileHover={{ scale: 1.05 }}
                                     className="w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] border-4 border-[#03050F] overflow-hidden bg-gray-800 shadow-2xl relative z-10"
                                 >
-                                    {displayUser.image ? (
+                                    {displayUser.profilePicture ? (
                                         <img
-                                            src={displayUser.image}
+                                            src={`${API_BASE_URL}/uploads/${displayUser.profilePicture}`}
                                             alt="Profile"
                                             className="w-full h-full object-cover"
                                         />

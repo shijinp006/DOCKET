@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, frameData } from "framer-motion";
 import {
   FaBolt,
   FaCheckCircle,
@@ -54,6 +54,8 @@ const AddProgram = () => {
 
   const [featureIconLabel, setFeatureIconLabel] = useState("Bolt");
   const [featureName, setFeatureName] = useState("");
+  console.log(imagePreview, "image");
+
 
   useEffect(() => {
     if (existingProgram) {
@@ -82,81 +84,84 @@ const AddProgram = () => {
     setFeatures((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const toBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
+  // const toBase64 = (file) =>
+  //   new Promise((resolve, reject) => {
+  //     const reader = new FileReader();
+  //     reader.readAsDataURL(file);
+  //     reader.onload = () => resolve(reader.result);
+  //     reader.onerror = (error) => reject(error);
+  //   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    let imageBase64 = imagePreview;
+    const formData = new FormData();
+
+    formData.append("name", name);
+    formData.append("category", category);
+    formData.append("title", title);
+    formData.append("programDate", date);
+    formData.append("programTime", time);
+    formData.append("description", description);
+    formData.append("features", JSON.stringify(features));
+    formData.append("subject", "New Program Launched!");
+    formData.append(
+      "message",
+      `A new program "${name}" has been launched. Check it out!`
+    );
+    formData.append("senderRole", "admin");
+    formData.append("recipientType", "all");
+
+    // ✅ Append real image file
     if (image) {
-      try {
-        imageBase64 = await toBase64(image);
-      } catch (error) {
-        console.error("Error converting image:", error);
-        alert("Error processing image");
-        return;
-      }
+      formData.append("file", image);
     }
 
-    let brochureBase64 = null;
-    if (brochure instanceof File) {
-      try {
-        brochureBase64 = await toBase64(brochure);
-      } catch (error) {
-        console.error("Error converting brochure:", error);
-        alert("Error processing brochure");
-        return;
-      }
-    } else if (existingProgram && existingProgram.brochure) {
-      brochureBase64 = existingProgram.brochure;
+    // ✅ Append real brochure file
+    if (brochure) {
+      formData.append("file", brochure);
     }
-
-    const programData = {
-      name: name,
-      category: category,
-      image: imageBase64,
-      brochure: brochureBase64,
-      title: title,
-      programDate: date,
-      programTime: time,
-      description: description,
-      features: features,
-    };
 
     try {
       if (existingProgram) {
-        await axios.put(`${API_BASE_URL}/programs/${existingProgram._id}`, programData);
+        await axios.put(
+          `${API_BASE_URL}/programs/${existingProgram._id}`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" }
+          }
+        );
+
         toast.success("Program refined successfully!");
       } else {
-        await axios.post(`${API_BASE_URL}/programs`, programData);
+        await axios.post(
+          `${API_BASE_URL}/programs`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" }
+          }
+        );
+
         toast.success("New program launched successfully!");
 
-        // Trigger notification for all users
-        try {
-          await axios.post(`${API_BASE_URL}/notifications`, {
-            subject: "New Program Launched!",
-            message: `A new program "${name}" has been launched. Check it out!`,
-            image: imageBase64,
-            senderRole: "admin",
-            recipientType: "all"
-          });
-        } catch (notificationError) {
-          console.error("Failed to send notification:", notificationError);
-        }
+        // 🔔 Send notification (no file needed here unless required)
+        await axios.post(
+          `${API_BASE_URL}/notifications`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
       }
+
       navigate(-1);
     } catch (error) {
       console.error("Save error:", error);
       toast.error(error.response?.data?.error || "Failed to save program details.");
     }
   };
-
   return (
     <div className="flex-1 min-h-screen bg-[#03050F] p-4 md:p-10 font-out text-gray-300 overflow-y-auto">
       <div className="max-w-5xl mx-auto">

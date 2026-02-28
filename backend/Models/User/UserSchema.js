@@ -56,7 +56,10 @@ const userSchema = new mongoose.Schema(
     designation: {
       type: String,
     },
-
+    profilePicture: {
+      type: String, // URL or file path to the profile picture
+      default :null
+    },
     qualification: {
       type: String,
     },

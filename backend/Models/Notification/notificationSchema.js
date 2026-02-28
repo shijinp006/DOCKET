@@ -24,9 +24,10 @@ const notificationSchema = new mongoose.Schema(
             required: true,
         },
 
-        image: {
+        images: {
             type: String,
-            default: null, // replaces ALTER TABLE image
+            default: null,
+            
         },
 
         senderRole: {

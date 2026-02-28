@@ -27,6 +27,8 @@ export function UpcomingEvents() {
         const fetchData = async () => {
             try {
                 const res = await axios.get(`${API_BASE_URL}/programs`);
+                console.log(res,"upcoming");
+                
                 const storedPrograms = res.data;
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -87,7 +89,7 @@ export function UpcomingEvents() {
                 >
                     {displayedItems.map((item, index) => (
                         <motion.div
-                            key={`${item.id}-${index}`}
+                            key={`${item._id}-${index}`}
                             whileHover={{
                                 y: -12,
                                 scale: 1.02,
@@ -97,7 +99,7 @@ export function UpcomingEvents() {
                         >
                             {/* Background Image Container */}
                             <div
-                                onClick={() => navigate(`/programdetails/${item.id}`)}
+                                onClick={() => navigate(`/programdetails/${item._id}`)}
                                 className="w-full h-[260px] cursor-pointer relative overflow-hidden"
                             >
                                 <motion.div
@@ -105,7 +107,7 @@ export function UpcomingEvents() {
                                     whileHover={{ scale: 1.15 }}
                                     transition={{ duration: 0.8 }}
                                     style={{
-                                        backgroundImage: `url(${item.image || "https://images.unsplash.com/photo-1540575861501-7ad058ad382d?auto=format&fit=crop&q=80&w=800"})`,
+                                        backgroundImage: `url(${API_BASE_URL}/uploads/${item.images || "default-event.jpg"})`,
                                     }}
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-80"></div>
@@ -156,7 +158,7 @@ export function UpcomingEvents() {
 
                                 <div className="pt-2">
                                     <button
-                                        onClick={() => navigate(`/programdetails/${item.id}`)}
+                                        onClick={() => navigate(`/programdetails/${item._id}`)}
                                         className="w-full py-4 bg-white/[0.05] hover:bg-blue-600 text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all duration-500 border border-white/10 hover:border-blue-500 group-hover:shadow-[0_0_30px_rgba(37,99,235,0.2)]"
                                     >
                                         Explore Program
